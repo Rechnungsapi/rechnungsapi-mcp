@@ -1,0 +1,41 @@
+{
+  "name": "rechnungsapi-mcp",
+  "version": "0.1.0",
+  "description": "MCP (Model Context Protocol) server for RechnungsAPI — lets AI agents create, validate, and analyze ZUGFeRD and X-Invoice e-invoices.",
+  "license": "MIT",
+  "author": "RechnungsAPI <support@rechnungsapi.de>",
+  "homepage": "https://rechnungsapi.de",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rechnungsapi/rechnungsapi-mcp.git"
+  },
+  "keywords": ["mcp", "model-context-protocol", "rechnungsapi", "zugferd", "xinvoice", "e-invoice"],
+  "type": "module",
+  "bin": {
+    "rechnungsapi-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.22.0",
+    "rechnungsapi-sdk": "^0.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

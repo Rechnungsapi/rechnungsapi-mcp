@@ -56,8 +56,6 @@ yarn typecheck
 yarn build
 ```
 
-> Until [`rechnungsapi-sdk`](https://github.com/Rechnungsapi/rechnungsapi-sdk) is published to npm, `yarn install` will fail to resolve it. Build/link it locally first: in the sdk repo run `yarn build && yarn link`, then here run `yarn link rechnungsapi-sdk`.
-
 Test locally with the [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
 
 ```bash

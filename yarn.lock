@@ -1223,6 +1223,11 @@ readdirp@^4.0.1:
   resolved "https://registry.yarnpkg.com/readdirp/-/readdirp-4.1.2.tgz#eb85801435fbf2a7ee58f19e0921b068fc69948d"
   integrity sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==
 
+rechnungsapi-sdk@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/rechnungsapi-sdk/-/rechnungsapi-sdk-0.1.0.tgz#efc8d9706bab114eea54e9508750e5ef07be0911"
+  integrity sha512-0TYvNqYAw3nxUZeUPX+BtzvelrU1ejhRuhteJ+h6MBMYS56mHwapO6Ev13Mp5l3CuuVZ3HzK53RCUFPpOmM2Sg==
+
 require-from-string@^2.0.2:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/require-from-string/-/require-from-string-2.0.2.tgz#89a7fdd938261267318eafe14f9c32e598c36909"

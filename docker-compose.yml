@@ -1,0 +1,12 @@
+services:
+  rechnungsapi-mcp:
+    build: .
+    # Or, once published to a registry: image: ghcr.io/rechnungsapi/rechnungsapi-mcp:latest
+    restart: unless-stopped
+    ports:
+      - "3939:3939"
+    environment:
+      # Optional overrides — leave unset to use the production gateway.
+      # RECHNUNGSAPI_BASE_URL: https://your-gateway.example.com
+      # RECHNUNGSAPI_V2_BASE_URL: https://api.v2.rechnungsapi.de
+      PORT: "3939"

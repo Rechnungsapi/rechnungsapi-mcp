@@ -34,6 +34,56 @@ Get your API token from the [RechnungsAPI dashboard](https://rechnungsapi.de), t
 | `RECHNUNGSAPI_BASE_URL` | No | Override the gateway base URL (e.g. for a sandbox environment) |
 | `RECHNUNGSAPI_V2_BASE_URL` | No | Override the v2 analyzer host |
 
+## Self-hosting (Streamable HTTP)
+
+By default this runs as a local `stdio` process, spawned per-user by their own AI client — that's what the setup above does, and it's the standard way MCP servers work. If instead you want to run **one shared, always-on server** that many users connect to remotely (no local install on their end at all — just a URL, like Apollo.io's hosted MCP server), use the HTTP mode instead.
+
+The key architectural difference: `stdio` mode reads one fixed `RECHNUNGSAPI_TOKEN` from the environment at startup and reuses it for the whole process's life. HTTP mode instead reads **each request's own token** from its `Authorization: Bearer <token>` header, and builds a fresh, isolated client per request — so many different customers can safely share the same running server, each authenticated as themselves, never seeing each other's data.
+
+### Run it
+
+```bash
+yarn build
+yarn start:http   # listens on $PORT, default 3939
+```
+
+Or via Docker:
+
+```bash
+docker build -t rechnungsapi-mcp .
+docker run -p 3939:3939 rechnungsapi-mcp
+```
+
+Or as a Portainer stack: paste [`docker-compose.yml`](docker-compose.yml) into Portainer's Stacks → Add stack → Web editor, then deploy.
+
+No `RECHNUNGSAPI_TOKEN` is configured on the server itself in this mode — each caller supplies their own.
+
+### Endpoints
+
+| Endpoint | Description |
+|---|---|
+| `POST /mcp` | The MCP endpoint. Requires `Authorization: Bearer <caller's own RechnungsAPI token>`. |
+| `GET /health` | Health check (used by Docker's `HEALTHCHECK` / Portainer / load balancers). No auth required. |
+
+### Putting it behind a domain
+
+See [`deploy/nginx-mcp.conf`](deploy/nginx-mcp.conf) for a ready-to-use reverse proxy config (e.g. for `mcp.rechnungsapi.de`), including the settings needed so nginx doesn't buffer/break the SSE streaming responses. Pair it with `certbot --nginx -d mcp.rechnungsapi.de` for HTTPS — required in practice, since real API tokens travel in every request.
+
+### What users configure, once it's hosted
+
+```json
+{
+  "mcpServers": {
+    "rechnungsapi": {
+      "url": "https://mcp.rechnungsapi.de/mcp",
+      "headers": { "Authorization": "Bearer <their-own-rechnungsapi-token>" }
+    }
+  }
+}
+```
+
+No install, no `npx`, nothing running on their machine.
+
 ## Tools
 
 | Tool | Description |

@@ -54,7 +54,7 @@ async function handleMcpRequest(req: http.IncomingMessage, res: http.ServerRespo
   })
 
   await mcpServer.connect(transport)
-  const body = req.method === "POST" ? await readJsonBody(req) : undefined
+  const body = await readJsonBody(req)
   await transport.handleRequest(req, res, body)
 }
 
@@ -66,6 +66,18 @@ const server = http.createServer(async (req, res) => {
 
   if (req.url !== "/mcp") {
     sendJson(res, 404, { error: "Not found. POST to /mcp." })
+    return
+  }
+
+  // This server is stateless (see handleMcpRequest) and never pushes
+  // unsolicited server-to-client messages, so the optional GET/SSE stream
+  // and DELETE/session-termination parts of the Streamable HTTP spec don't
+  // apply here. Reject them fast and explicitly — StreamableHTTPServerTransport
+  // has no defined behavior for them with sessionIdGenerator: undefined and
+  // was observed to hang indefinitely rather than respond, which made MCP
+  // clients' initial reachability probe (a bare GET) time out.
+  if (req.method !== "POST") {
+    sendJson(res, 405, { error: "Only POST is supported on /mcp (no server-initiated SSE stream)." })
     return
   }
 

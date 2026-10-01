@@ -75,6 +75,7 @@ See [`deploy/nginx-mcp.conf`](deploy/nginx-mcp.conf) for a ready-to-use reverse 
 {
   "mcpServers": {
     "rechnungsapi": {
+      "type": "http",
       "url": "https://mcp.rechnungsapi.de/mcp",
       "headers": { "Authorization": "Bearer <their-own-rechnungsapi-token>" }
     }

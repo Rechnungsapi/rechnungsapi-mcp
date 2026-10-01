@@ -3,12 +3,13 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { RechnungsApiClient } from "rechnungsapi-sdk"
 import { loadConfigFromEnv } from "./config.js"
 import { registerTools } from "./tools.js"
+import { SERVER_NAME, SERVER_VERSION } from "./version.js"
 
 async function main() {
   const config = loadConfigFromEnv()
   const client = new RechnungsApiClient(config)
 
-  const server = new McpServer({ name: "rechnungsapi-mcp", version: "0.1.0" })
+  const server = new McpServer({ name: SERVER_NAME, version: SERVER_VERSION })
   registerTools(server, client)
 
   const transport = new StdioServerTransport()

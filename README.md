@@ -85,6 +85,25 @@ See [`deploy/nginx-mcp.conf`](deploy/nginx-mcp.conf) for a ready-to-use reverse 
 
 No install, no `npx`, nothing running on their machine.
 
+### Troubleshooting a client that "can't reach" the server
+
+Every request is logged, so start with the container logs while the client tries to connect:
+
+```bash
+docker logs -f rechnungsapi-mcp
+# [http] POST /mcp -> 200 12ms auth=yes rpc=initialize proto=- ua="..."
+```
+
+| What you see | What it means |
+|---|---|
+| Nothing at all | The request never arrived — check DNS, the reverse proxy, and firewalls. `curl https://your-host/health` from outside should return `{"ok":true,...}`. |
+| `401 ... auth=no` | The client isn't sending an `Authorization` header — the connector's auth mode is probably set to OAuth/none instead of a Bearer/API-key header. |
+| `401 ... auth=yes` | The header arrived but the token is empty or wrong. The `Bearer ` prefix is optional — a bare token is accepted. |
+| `GET /mcp -> 405` | Expected. This server doesn't offer the optional server-push SSE stream; compliant clients continue over `POST`. |
+| `OPTIONS /mcp -> 204` | Expected — a browser-based client's CORS preflight. |
+
+Log lines record JSON-RPC method names only (e.g. `rpc=tools/call`), never arguments, so invoice data and tokens don't end up in your logs.
+
 ## Tools
 
 | Tool | Description |

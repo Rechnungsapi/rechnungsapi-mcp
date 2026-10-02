@@ -72,7 +72,7 @@ It works with Claude Code, Claude Desktop and Open WebUI, and with any MCP clien
 ## Why teams use it
 
 - **Nothing to install.** Use the hosted server at `mcp.rechnungsapi.de`, or run the same server locally with one `npx` line.
-- **Your token, your data.** Every request carries the caller's own token, so nothing is shared between customers. The server stores no invoices and logs only the method name of each call, never arguments or tokens.
+- **Your token, your data.** Every request carries the caller's own token, so nothing is shared between customers. The server stores no invoices, and its logs hold request metadata only (path, status, timing), never invoice data, tool arguments or tokens.
 - **Complete.** Ten tools cover creating, validating and reading e-invoices, including asynchronous analysis for big files.
 - **Built for Germany and the EU.** RechnungsAPI is built for EN 16931, GoBD and GDPR, with data processed on German servers, and supports ZUGFeRD, XRechnung and Factur-X.
 - **Open source and typed.** MIT licensed and built on the [`rechnungsapi-sdk`](https://www.npmjs.com/package/rechnungsapi-sdk).

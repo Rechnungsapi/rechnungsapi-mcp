@@ -9,4 +9,5 @@ services:
       # Optional overrides — leave unset to use the production gateway.
       # RECHNUNGSAPI_BASE_URL: https://your-gateway.example.com
       # RECHNUNGSAPI_V2_BASE_URL: https://api.v2.rechnungsapi.de
+      # MAX_BODY_MB: "64"   # largest accepted request body, in MB
       PORT: "3939"

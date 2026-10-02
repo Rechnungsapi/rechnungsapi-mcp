@@ -127,7 +127,7 @@ const LANDING_HTML = `<!doctype html>
 <li><a href="${SERVER_WEBSITE}/api-docs">API documentation</a></li>
 <li><a href="${SERVER_WEBSITE}">rechnungsapi.de</a></li>
 </ul>
-<p><small>rechnungsapi-mcp ${SERVER_VERSION} · RechnungsAPI</small></p>
+<p><small>rechnungsapi-mcp ${SERVER_VERSION} · rechnungsapi.de</small></p>
 </body>
 </html>
 `

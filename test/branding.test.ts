@@ -66,6 +66,12 @@ describe("the package presents itself as RechnungsAPI (rechnungsapi.de)", () => 
     expect(dockerfile).toContain("org.opencontainers.image.source=")
   })
 
+  it("does not name a company or legal entity anywhere a reader can see", () => {
+    // The package is presented as RechnungsAPI (rechnungsapi.de) only.
+    const visible = [pkg.description, JSON.stringify(pkg.author), visibleText(read("README.md")), read("LICENSE"), read("Dockerfile")].join("\n")
+    expect(visible).not.toMatch(/\bGmbH\b/)
+  })
+
   it("keeps the other vendor's product name out of the description, keywords and README text", () => {
     expect([pkg.description, ...pkg.keywords].join("\n")).not.toMatch(COMPETITOR_TERM)
     expect(visibleText(read("README.md"))).not.toMatch(COMPETITOR_TERM)
@@ -90,6 +96,7 @@ describe("the server introduces itself as RechnungsAPI to every MCP client", () 
     const { tools } = await client.listTools()
     expect(JSON.stringify(tools)).not.toMatch(COMPETITOR_TERM)
     expect(JSON.stringify(client.getInstructions())).not.toMatch(COMPETITOR_TERM)
+    expect(JSON.stringify({ tools, instructions: client.getInstructions(), server: client.getServerVersion() })).not.toMatch(/\bGmbH\b/)
   })
 
   it("names the XRechnung tools after the standard", async () => {
@@ -110,6 +117,7 @@ describe("opening the server's address tells you whose it is", () => {
     expect(html).toContain("https://rechnungsapi.de/api-docs#mcp-sdk")
     expect(html).toContain('name="robots" content="noindex"')
     expect(html).not.toMatch(COMPETITOR_TERM)
+    expect(html).not.toMatch(/\bGmbH\b/)
   })
 
   it("answers anything else with JSON that points at the docs", async () => {

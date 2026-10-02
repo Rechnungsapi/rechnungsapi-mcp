@@ -2,7 +2,7 @@
 
 The official **[RechnungsAPI](https://rechnungsapi.de)** MCP (Model Context Protocol) server — the ZUGFeRD & XRechnung API from [rechnungsapi.de](https://rechnungsapi.de) for AI agents. It lets Claude and other MCP-compatible agents create, validate and analyze e-invoices directly from a conversation.
 
-RechnungsAPI is operated by RechnungsAPI. You need a RechnungsAPI account and API token to use it.
+You need a RechnungsAPI account and API token to use it.
 
 - **Hosted by RechnungsAPI:** `https://mcp.rechnungsapi.de/mcp` — nothing to install, you only send your own token (see [What users configure, once it's hosted](#what-users-configure-once-its-hosted)).
 - **Run it yourself:** `npx -y rechnungsapi-mcp` (see [Setup](#setup)).

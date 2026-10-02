@@ -66,7 +66,7 @@ export function registerTools(server: McpServer, client: RechnungsApiClient): vo
         transport: transportSchema,
       },
     },
-    async ({ invoice, transport }) => asToolResult(() => client.createXInvoiceFromJson(invoice, { transport })),
+    async ({ invoice, transport }) => asToolResult(() => client.createXRechnungFromJson(invoice, { transport })),
   )
 
   server.registerTool(
@@ -91,7 +91,7 @@ export function registerTools(server: McpServer, client: RechnungsApiClient): vo
         zugferd64: z.string().describe("Base64-encoded ZUGFeRD PDF"),
       },
     },
-    async ({ zugferd64 }) => asToolResult(() => client.extractXInvoiceFromZugferd(zugferd64)),
+    async ({ zugferd64 }) => asToolResult(() => client.extractXRechnungFromZugferd(zugferd64)),
   )
 
   server.registerTool(
@@ -103,7 +103,7 @@ export function registerTools(server: McpServer, client: RechnungsApiClient): vo
         xml: z.string().describe("The XRechnung XML content to validate"),
       },
     },
-    async ({ xml }) => asToolResult(() => client.validateXInvoiceXml(xml)),
+    async ({ xml }) => asToolResult(() => client.validateXRechnungXml(xml)),
   )
 
   server.registerTool(

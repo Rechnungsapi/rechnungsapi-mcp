@@ -9,7 +9,8 @@ export function loadConfigFromEnv(): RechnungsApiMcpConfig {
   if (!apiToken) {
     throw new Error(
       "RECHNUNGSAPI_TOKEN environment variable is required. Get your API token from the RechnungsAPI dashboard " +
-        "and set it in your MCP client's server config (e.g. Claude Desktop/Code's mcp.json under \"env\").",
+        "and set it in your MCP client's server config (e.g. Claude Desktop/Code's mcp.json under \"env\"). " +
+        "Setup guide: https://rechnungsapi.de/api-docs#mcp-sdk",
     )
   }
   return {

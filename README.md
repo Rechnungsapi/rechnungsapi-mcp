@@ -2,11 +2,19 @@
 
 MCP (Model Context Protocol) server for [RechnungsAPI](https://rechnungsapi.de) — lets Claude and other MCP-compatible AI agents create, validate, and analyze ZUGFeRD and X-Invoice e-invoices directly from a conversation.
 
-Built on [`rechnungsapi-sdk`](https://github.com/Rechnungsapi/rechnungsapi-sdk).
+Built on [`rechnungsapi-sdk`](https://www.npmjs.com/package/rechnungsapi-sdk).
+
+## Documentation
+
+- **[API documentation](https://rechnungsapi.de/api-docs)** — every endpoint these tools call, with request, response and error codes (English and German)
+- **[MCP server & SDK guide](https://rechnungsapi.de/api-docs#mcp-sdk)** — how to connect AI clients to RechnungsAPI's hosted MCP server
+- [Authentication](https://rechnungsapi.de/api-docs#authentication) — where your API token comes from and how it is sent
+- [Invoice object reference](https://rechnungsapi.de/api-docs#invoice-object) — the fields the `create_*` tools expect in `invoice` (EN 16931 business terms)
+- [Errors](https://rechnungsapi.de/api-docs#errors) — what the HTTP status codes and validation results mean
 
 ## Setup
 
-Get your API token from the [RechnungsAPI dashboard](https://rechnungsapi.de), then add the server to your MCP client's config.
+Get your API token from your RechnungsAPI profile — [sign in](https://rechnungsapi.de/login) (or [sign up](https://rechnungsapi.de/register)) and open **Profile**; see [Authentication](https://rechnungsapi.de/api-docs#authentication) — then add the server to your MCP client's config.
 
 **Claude Code** (`.mcp.json` in your project, or via `claude mcp add`):
 
@@ -107,7 +115,7 @@ docker logs -f rechnungsapi-mcp
 |---|---|
 | Nothing at all | The request never arrived — check DNS, the reverse proxy, and firewalls. `curl https://your-host/health` from outside should return `{"ok":true,...}`. |
 | `401 ... auth=no` | The client isn't sending an `Authorization` header — the connector's auth mode is probably set to OAuth/none instead of a Bearer/API-key header. |
-| `401 ... auth=yes` | The header arrived but the token is empty or wrong. The `Bearer ` prefix is optional — a bare token is accepted. |
+| `401 ... auth=yes` | The header arrived but the token is empty or wrong — copy it again from your profile (see [Authentication](https://rechnungsapi.de/api-docs#authentication)). The `Bearer ` prefix is optional — a bare token is accepted. |
 | `GET /mcp -> 405` | Expected. This server doesn't offer the optional server-push SSE stream; compliant clients continue over `POST`. |
 | `OPTIONS /mcp -> 204` | Expected — a browser-based client's CORS preflight. |
 | `POST /mcp -> 413` | The request body exceeded `MAX_BODY_MB`. |
@@ -128,6 +136,8 @@ Log lines record JSON-RPC method names only (e.g. `rpc=tools/call`), never argum
 | `analyze_pdf_invoice` | Extract structured invoice JSON from a scanned/PDF invoice |
 | `analyze_pdf_invoice_async_submit` / `analyze_pdf_invoice_async_status` | Async analysis for large files |
 | `create_zugferd_from_pdf` | Convert a PDF/scan directly into a validated ZUGFeRD PDF |
+
+Each tool maps to one RechnungsAPI endpoint — the [API documentation](https://rechnungsapi.de/api-docs#endpoints) shows its request and response.
 
 ## Development
 

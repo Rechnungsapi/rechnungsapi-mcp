@@ -3,7 +3,16 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js"
 import { RechnungsApiClient } from "rechnungsapi-sdk"
 import { registerTools } from "./tools.js"
-import { SERVER_INSTRUCTIONS, SERVER_NAME, SERVER_VERSION } from "./version.js"
+import {
+  SERVER_DESCRIPTION,
+  SERVER_DOCS,
+  SERVER_INFO,
+  SERVER_INSTRUCTIONS,
+  SERVER_NAME,
+  SERVER_TITLE,
+  SERVER_VERSION,
+  SERVER_WEBSITE,
+} from "./version.js"
 
 const PORT = Number(process.env.PORT ?? 3939)
 
@@ -98,6 +107,50 @@ function sendJson(res: http.ServerResponse, status: number, body: unknown, extra
   res.end(JSON.stringify(body))
 }
 
+// What a person sees when they open the server's address in a browser. Static text only, so there is
+// nothing to escape, and noindex because the product pages on rechnungsapi.de are the ones to find.
+const LANDING_HTML = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>${SERVER_TITLE} MCP server</title>
+<style>body{font:16px/1.55 system-ui,sans-serif;max-width:40rem;margin:4rem auto;padding:0 1rem;color:#1f2937}code{background:#f3f4f6;padding:.1rem .35rem;border-radius:.25rem}a{color:#2563eb}small{color:#6b7280}</style>
+</head>
+<body>
+<h1>${SERVER_TITLE} MCP server</h1>
+<p>This is the MCP endpoint of <a href="${SERVER_WEBSITE}">${SERVER_TITLE}</a> (rechnungsapi.de), the ZUGFeRD &amp; XRechnung API. It lets AI agents create, validate and analyze e-invoices.</p>
+<p>MCP clients connect to <code>/mcp</code> on this host and send their own ${SERVER_TITLE} token as <code>Authorization: Bearer &lt;token&gt;</code>.</p>
+<ul>
+<li><a href="${SERVER_DOCS}">How to connect: documentation</a></li>
+<li><a href="${SERVER_WEBSITE}/api-docs">API documentation</a></li>
+<li><a href="${SERVER_WEBSITE}">rechnungsapi.de</a></li>
+</ul>
+<p><small>rechnungsapi-mcp ${SERVER_VERSION} · RechnungsAPI</small></p>
+</body>
+</html>
+`
+
+function sendLanding(req: http.IncomingMessage, res: http.ServerResponse) {
+  const common = { "cache-control": "public, max-age=300", "x-content-type-options": "nosniff" }
+  if ((req.headers.accept ?? "").includes("text/html")) {
+    res.writeHead(200, {
+      ...common,
+      "content-type": "text/html; charset=utf-8",
+      "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+    })
+    res.end(LANDING_HTML)
+    return
+  }
+  sendJson(
+    res,
+    200,
+    { name: SERVER_TITLE, description: SERVER_DESCRIPTION, version: SERVER_VERSION, mcp: "/mcp", health: "/health", docs: SERVER_DOCS, website: SERVER_WEBSITE },
+    common,
+  )
+}
+
 /** JSON-RPC method names only — never params, which can carry invoice data. */
 function describeRpc(body: unknown): string {
   const messages = Array.isArray(body) ? body : [body]
@@ -134,7 +187,7 @@ async function handleMcpRequest(req: http.IncomingMessage, res: http.ServerRespo
     v2BaseUrl: process.env.RECHNUNGSAPI_V2_BASE_URL,
   })
 
-  const mcpServer = new McpServer({ name: SERVER_NAME, version: SERVER_VERSION }, { instructions: SERVER_INSTRUCTIONS })
+  const mcpServer = new McpServer(SERVER_INFO, { instructions: SERVER_INSTRUCTIONS })
   registerTools(mcpServer, client)
 
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined })
@@ -166,8 +219,13 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
+  if (route === "/" && (req.method === "GET" || req.method === "HEAD")) {
+    sendLanding(req, res)
+    return
+  }
+
   if (route !== "/mcp") {
-    sendJson(res, 404, { error: "Not found. POST to /mcp." })
+    sendJson(res, 404, { error: "Not found. POST to /mcp.", docs: SERVER_DOCS })
     return
   }
 

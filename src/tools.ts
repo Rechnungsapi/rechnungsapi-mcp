@@ -57,10 +57,10 @@ export function registerTools(server: McpServer, client: RechnungsApiClient): vo
   )
 
   server.registerTool(
-    "create_xinvoice",
+    "create_xrechnung",
     {
-      title: "Create X-Invoice (XRechnung/UBL)",
-      description: "Create an X-Invoice (XRechnung/UBL) XML document from structured invoice JSON.",
+      title: "Create XRechnung (XML)",
+      description: "Create an XRechnung XML document from structured invoice JSON.",
       inputSchema: {
         invoice: invoiceJsonSchema,
         transport: transportSchema,
@@ -72,20 +72,20 @@ export function registerTools(server: McpServer, client: RechnungsApiClient): vo
   server.registerTool(
     "create_zugferd_pdf",
     {
-      title: "Embed X-Invoice XML into a PDF",
-      description: "Embed an existing X-Invoice XML document into a visual PDF to produce a ZUGFeRD PDF.",
+      title: "Embed XRechnung XML into a PDF",
+      description: "Embed an existing XRechnung XML document into a visual PDF to produce a ZUGFeRD PDF.",
       inputSchema: {
         invoicePdf64: z.string().describe("Base64-encoded visual PDF"),
-        xInvoiceXml: z.string().describe("X-Invoice XML to embed"),
+        xrechnungXml: z.string().describe("XRechnung XML to embed"),
       },
     },
-    async ({ invoicePdf64, xInvoiceXml }) => asToolResult(() => client.createZugferdPdf(invoicePdf64, xInvoiceXml)),
+    async ({ invoicePdf64, xrechnungXml }) => asToolResult(() => client.createZugferdPdf(invoicePdf64, xrechnungXml)),
   )
 
   server.registerTool(
-    "extract_xinvoice_from_zugferd",
+    "extract_xrechnung_from_zugferd",
     {
-      title: "Extract X-Invoice from ZUGFeRD PDF",
+      title: "Extract XRechnung from ZUGFeRD PDF",
       description: "Extract the embedded XRechnung XML from a ZUGFeRD PDF and return it as structured JSON.",
       inputSchema: {
         zugferd64: z.string().describe("Base64-encoded ZUGFeRD PDF"),
@@ -95,12 +95,12 @@ export function registerTools(server: McpServer, client: RechnungsApiClient): vo
   )
 
   server.registerTool(
-    "validate_xinvoice_xml",
+    "validate_xrechnung_xml",
     {
-      title: "Validate X-Invoice XML",
-      description: "Validate an X-Invoice (XRechnung/UBL) XML document against schema and business rules.",
+      title: "Validate XRechnung XML",
+      description: "Validate an XRechnung XML document against schema and business rules.",
       inputSchema: {
-        xml: z.string().describe("The X-Invoice XML content to validate"),
+        xml: z.string().describe("The XRechnung XML content to validate"),
       },
     },
     async ({ xml }) => asToolResult(() => client.validateXInvoiceXml(xml)),

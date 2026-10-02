@@ -12,12 +12,12 @@ const EXPECTED_TOOLS = [
   "analyze_pdf_invoice",
   "analyze_pdf_invoice_async_status",
   "analyze_pdf_invoice_async_submit",
-  "create_xinvoice",
+  "create_xrechnung",
   "create_zugferd_from_pdf",
   "create_zugferd_invoice",
   "create_zugferd_pdf",
-  "extract_xinvoice_from_zugferd",
-  "validate_xinvoice_xml",
+  "extract_xrechnung_from_zugferd",
+  "validate_xrechnung_xml",
   "validate_zugferd_pdf",
 ]
 
@@ -187,7 +187,7 @@ describe("with the official MCP client", () => {
   it("a tool call reaches the API with the caller's token and returns its result", async () => {
     const before = upstream.requests.length
     const client = await connect("tok-single")
-    const res = await client.callTool({ name: "validate_xinvoice_xml", arguments: { xml: "<x/>" } })
+    const res = await client.callTool({ name: "validate_xrechnung_xml", arguments: { xml: "<x/>" } })
     await client.close()
     expect(res.isError).toBeFalsy()
     expect(JSON.stringify(res.content)).toContain("isValid")
@@ -199,7 +199,7 @@ describe("with the official MCP client", () => {
 
   it("an API failure comes back as a tool error, not a crash", async () => {
     const client = await connect("tok-bad")
-    const res = await client.callTool({ name: "validate_xinvoice_xml", arguments: { xml: "FORCE_401" } })
+    const res = await client.callTool({ name: "validate_xrechnung_xml", arguments: { xml: "FORCE_401" } })
     await client.close()
     expect(res.isError).toBe(true)
     expect(JSON.stringify(res.content)).toContain("401")
@@ -215,7 +215,7 @@ describe("with the official MCP client", () => {
         jobs.push(
           (async () => {
             const client = await connect(`tok-${who}`)
-            await client.callTool({ name: "validate_xinvoice_xml", arguments: { xml: `<who>${who}-${i}</who>` } })
+            await client.callTool({ name: "validate_xrechnung_xml", arguments: { xml: `<who>${who}-${i}</who>` } })
             await client.close()
           })(),
         )
@@ -235,7 +235,7 @@ describe("with the official MCP client", () => {
 describe("privacy", () => {
   it("logs method, path and status, but never tokens or tool arguments", async () => {
     const client = await connect("tok-SECRET-should-never-be-logged")
-    await client.callTool({ name: "validate_xinvoice_xml", arguments: { xml: "<m>INVOICE-DATA-should-never-be-logged</m>" } })
+    await client.callTool({ name: "validate_xrechnung_xml", arguments: { xml: "<m>INVOICE-DATA-should-never-be-logged</m>" } })
     await client.close()
     const logs = server.logs()
     expect(logs).toContain("rpc=tools/call")

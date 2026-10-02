@@ -41,7 +41,7 @@ describe("what an AI client is told about the server", () => {
     }
   })
 
-  it.each(["create_zugferd_invoice", "create_xinvoice"])("%s: `invoice` is a required object that points at the field reference", async (name) => {
+  it.each(["create_zugferd_invoice", "create_xrechnung"])("%s: `invoice` is a required object that points at the field reference", async (name) => {
     const { tools } = await client.listTools()
     const schema = tools.find((t) => t.name === name)!.inputSchema as {
       properties: Record<string, { type?: string; description?: string }>
@@ -52,7 +52,7 @@ describe("what an AI client is told about the server", () => {
     expect(schema.properties.invoice.description).toContain("https://rechnungsapi.de/api-docs#invoice-object")
   })
 
-  it.each(["create_zugferd_invoice", "create_xinvoice"])("%s: `transport` is an optional object that points at the email docs", async (name) => {
+  it.each(["create_zugferd_invoice", "create_xrechnung"])("%s: `transport` is an optional object that points at the email docs", async (name) => {
     const { tools } = await client.listTools()
     const schema = tools.find((t) => t.name === name)!.inputSchema as {
       properties: Record<string, { type?: string; description?: string }>
@@ -80,7 +80,7 @@ describe("the invoice travels to the API exactly as given", () => {
 
   it("keeps nested objects, arrays, numbers, booleans, null and unicode intact", async () => {
     const before = upstream.requests.length
-    const res = await client.callTool({ name: "create_xinvoice", arguments: { invoice, transport: { method: "email", to: ["a@example.com"] } } })
+    const res = await client.callTool({ name: "create_xrechnung", arguments: { invoice, transport: { method: "email", to: ["a@example.com"] } } })
     expect(res.isError).toBeFalsy()
     const sent = upstream.requests.slice(before)
     expect(sent).toHaveLength(1)
@@ -90,7 +90,7 @@ describe("the invoice travels to the API exactly as given", () => {
 
   it("omits `transport` entirely when it isn't given", async () => {
     const before = upstream.requests.length
-    await client.callTool({ name: "create_xinvoice", arguments: { invoice: { n: 1 } } })
+    await client.callTool({ name: "create_xrechnung", arguments: { invoice: { n: 1 } } })
     expect(JSON.parse(upstream.requests[before].body)).toEqual({ invoice: { n: 1 } })
   })
 
@@ -101,7 +101,7 @@ describe("the invoice travels to the API exactly as given", () => {
     ["null", null],
   ])("rejects %s as the invoice without calling the API", async (_label, bad) => {
     const before = upstream.requests.length
-    const outcome = await client.callTool({ name: "create_xinvoice", arguments: { invoice: bad } }).then(
+    const outcome = await client.callTool({ name: "create_xrechnung", arguments: { invoice: bad } }).then(
       (r) => r.isError === true,
       () => true, // a JSON-RPC "invalid params" error is just as good
     )

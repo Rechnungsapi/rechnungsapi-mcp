@@ -9,7 +9,7 @@ services:
     container_name: rechnungsapi-mcp
     restart: unless-stopped
     # `$$` is how a compose file writes a literal `$`.
-    command: sh -c "npm install -g rechnungsapi-mcp@0.3.1 && exec node $$(npm root -g)/rechnungsapi-mcp/dist/http.js"
+    command: sh -c "npm install -g rechnungsapi-mcp@0.4.0 && exec node $$(npm root -g)/rechnungsapi-mcp/dist/http.js"
     environment:
       PORT: "3939"
       # MAX_BODY_MB: "64"   # largest accepted request body, in MB

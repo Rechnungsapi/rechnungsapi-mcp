@@ -1,6 +1,13 @@
 # rechnungsapi-mcp
 
-MCP (Model Context Protocol) server for [RechnungsAPI](https://rechnungsapi.de) — lets Claude and other MCP-compatible AI agents create, validate, and analyze ZUGFeRD and X-Invoice e-invoices directly from a conversation.
+The official **[RechnungsAPI](https://rechnungsapi.de)** MCP (Model Context Protocol) server — the ZUGFeRD & XRechnung API from [rechnungsapi.de](https://rechnungsapi.de) for AI agents. It lets Claude and other MCP-compatible agents create, validate and analyze e-invoices directly from a conversation.
+
+RechnungsAPI is operated by RechnungsAPI. You need a RechnungsAPI account and API token to use it.
+
+- **Hosted by RechnungsAPI:** `https://mcp.rechnungsapi.de/mcp` — nothing to install, you only send your own token (see [What users configure, once it's hosted](#what-users-configure-once-its-hosted)).
+- **Run it yourself:** `npx -y rechnungsapi-mcp` (see [Setup](#setup)).
+
+[Website](https://rechnungsapi.de) · [API documentation](https://rechnungsapi.de/api-docs) · [SDK for developers](https://www.npmjs.com/package/rechnungsapi-sdk) · [Support](mailto:support@rechnungsapi.de)
 
 Built on [`rechnungsapi-sdk`](https://www.npmjs.com/package/rechnungsapi-sdk).
 
@@ -44,7 +51,7 @@ Get your API token from your RechnungsAPI profile — [sign in](https://rechnung
 
 ## Self-hosting (Streamable HTTP)
 
-By default this runs as a local `stdio` process, spawned per-user by their own AI client — that's what the setup above does, and it's the standard way MCP servers work. If instead you want to run **one shared, always-on server** that many users connect to remotely (no local install on their end at all — just a URL, like Apollo.io's hosted MCP server), use the HTTP mode instead.
+By default this runs as a local `stdio` process, spawned per-user by their own AI client — that's what the setup above does, and it's the standard way MCP servers work. If instead you want to run **one shared, always-on server** that many users connect to remotely (no local install on their end at all — just a URL), use the HTTP mode instead.
 
 The key architectural difference: `stdio` mode reads one fixed `RECHNUNGSAPI_TOKEN` from the environment at startup and reuses it for the whole process's life. HTTP mode instead reads **each request's own token** from its `Authorization: Bearer <token>` header, and builds a fresh, isolated client per request — so many different customers can safely share the same running server, each authenticated as themselves, never seeing each other's data.
 
@@ -133,10 +140,10 @@ Log lines record JSON-RPC method names only (e.g. `rpc=tools/call`), never argum
 | Tool | Description |
 |---|---|
 | `create_zugferd_invoice` | Create a ZUGFeRD PDF/A-3 from structured invoice JSON + a visual PDF |
-| `create_xinvoice` | Create an X-Invoice (XRechnung/UBL) XML from structured invoice JSON |
-| `create_zugferd_pdf` | Embed an existing X-Invoice XML into a visual PDF |
-| `extract_xinvoice_from_zugferd` | Extract the embedded XRechnung XML from a ZUGFeRD PDF as JSON |
-| `validate_xinvoice_xml` | Validate an X-Invoice XML against schema and business rules |
+| `create_xrechnung` | Create an XRechnung XML from structured invoice JSON |
+| `create_zugferd_pdf` | Embed an existing XRechnung XML into a visual PDF |
+| `extract_xrechnung_from_zugferd` | Extract the embedded XRechnung XML from a ZUGFeRD PDF as JSON |
+| `validate_xrechnung_xml` | Validate an XRechnung XML against schema and business rules |
 | `validate_zugferd_pdf` | Validate a ZUGFeRD PDF's embedded XML |
 | `analyze_pdf_invoice` | Extract structured invoice JSON from a scanned/PDF invoice |
 | `analyze_pdf_invoice_async_submit` / `analyze_pdf_invoice_async_status` | Async analysis for large files |
@@ -163,4 +170,4 @@ RECHNUNGSAPI_TOKEN=your-token yarn inspect
 
 ## License
 
-MIT
+MIT © RechnungsAPI · [rechnungsapi.de](https://rechnungsapi.de) · support@rechnungsapi.de

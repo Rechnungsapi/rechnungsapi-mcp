@@ -7,6 +7,13 @@ COPY src ./src
 RUN yarn build
 
 FROM node:20-alpine
+LABEL org.opencontainers.image.title="RechnungsAPI MCP server" \
+      org.opencontainers.image.description="MCP server for RechnungsAPI (rechnungsapi.de), the ZUGFeRD & XRechnung API" \
+      org.opencontainers.image.vendor="RechnungsAPI" \
+      org.opencontainers.image.url="https://rechnungsapi.de" \
+      org.opencontainers.image.documentation="https://rechnungsapi.de/api-docs#mcp-sdk" \
+      org.opencontainers.image.source="https://github.com/Rechnungsapi/rechnungsapi-mcp" \
+      org.opencontainers.image.licenses="MIT"
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json yarn.lock ./

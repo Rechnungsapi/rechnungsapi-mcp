@@ -23,7 +23,7 @@ describe("stdio mode (what `npx rechnungsapi-mcp` runs)", () => {
       expect(client.getServerVersion()).toMatchObject({ name: "rechnungsapi-mcp", version: pkg.version })
       expect((await client.listTools()).tools).toHaveLength(10)
 
-      const res = await client.callTool({ name: "validate_xinvoice_xml", arguments: { xml: "<x/>" } })
+      const res = await client.callTool({ name: "validate_xrechnung_xml", arguments: { xml: "<x/>" } })
       expect(res.isError).toBeFalsy()
       expect(upstream.requests.at(-1)?.authorization).toBe("Bearer stdio-token-1")
     } finally {

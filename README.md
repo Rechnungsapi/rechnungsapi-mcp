@@ -14,7 +14,7 @@ Built on [`rechnungsapi-sdk`](https://www.npmjs.com/package/rechnungsapi-sdk).
 
 ## Setup
 
-Get your API token from your RechnungsAPI profile — [sign in](https://rechnungsapi.de/login) (or [sign up](https://rechnungsapi.de/register)) and open **Profile**; see [Authentication](https://rechnungsapi.de/api-docs#authentication) — then add the server to your MCP client's config.
+Get your API token from your RechnungsAPI profile — [sign in](https://rechnungsapi.de/login) (or [sign up](https://rechnungsapi.de/register)) and open **Profile**; see [Authentication](https://rechnungsapi.de/api-docs#authentication) — then add the server to your MCP client's config. The local (`npx`) setup below needs Node.js 20 or newer.
 
 **Claude Code** (`.mcp.json` in your project, or via `claude mcp add`):
 

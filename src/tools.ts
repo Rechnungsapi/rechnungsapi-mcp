@@ -3,13 +3,19 @@ import { RechnungsApiClient, RechnungsApiError } from "rechnungsapi-sdk"
 import { z } from "zod"
 
 const invoiceJsonSchema = z
-  .any()
-  .describe("Structured invoice data (line items, parties, totals, etc.) as defined by the RechnungsAPI invoice schema")
+  .record(z.string(), z.unknown())
+  .describe(
+    "Structured invoice data as a JSON object: header, seller, buyer, line items, VAT, totals and payment instructions " +
+      "(EN 16931 business terms). Field reference: https://rechnungsapi.de/api-docs#invoice-object",
+  )
 
 const transportSchema = z
-  .any()
+  .record(z.string(), z.unknown())
   .optional()
-  .describe("Optional delivery/transport metadata (e.g. email delivery options)")
+  .describe(
+    "Optional email delivery: when set, the generated invoice is also sent by email in the same call. " +
+      "Options: https://rechnungsapi.de/api-docs#email-transport",
+  )
 
 /** Wraps a client call so thrown RechnungsApiError/generic errors become MCP tool errors instead of crashing the server. */
 async function asToolResult(fn: () => Promise<unknown>) {

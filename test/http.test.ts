@@ -64,6 +64,23 @@ describe("housekeeping endpoints", () => {
   })
 })
 
+describe("URLs people actually type", () => {
+  it.each(["/mcp/", "/mcp?x=1", "/mcp/?x=1"])("POST %s reaches the MCP endpoint", async (path) => {
+    const r = await fetch(`${server.base}${path}`, { method: "POST", headers: { ...MCP_HEADERS, authorization: "Bearer some-token" }, body: toolsList })
+    expect(r.status).toBe(200)
+    expect((await r.text()).match(/"name":"/g)?.length).toBe(10)
+  })
+
+  it.each(["/health/", "/health?probe=1"])("GET %s is the health check", async (path) => {
+    expect((await fetch(`${server.base}${path}`)).status).toBe(200)
+  })
+
+  it.each(["/mcpx", "/mcp/extra", "//mcp", "/"])("%s is still a 404", async (path) => {
+    const r = await fetch(`${server.base}${path}`, { method: "POST", headers: { ...MCP_HEADERS, authorization: "Bearer some-token" }, body: toolsList })
+    expect(r.status).toBe(404)
+  })
+})
+
 describe("protocol edge cases that once broke real clients", () => {
   it("OPTIONS /mcp (CORS preflight) -> 204 with permissive CORS headers", async () => {
     const r = await fetch(`${server.base}/mcp`, { method: "OPTIONS", headers: { origin: "https://claude.ai" } })

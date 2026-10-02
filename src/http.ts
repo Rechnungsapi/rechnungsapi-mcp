@@ -3,7 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js"
 import { RechnungsApiClient } from "rechnungsapi-sdk"
 import { registerTools } from "./tools.js"
-import { SERVER_NAME, SERVER_VERSION } from "./version.js"
+import { SERVER_INSTRUCTIONS, SERVER_NAME, SERVER_VERSION } from "./version.js"
 
 const PORT = Number(process.env.PORT ?? 3939)
 
@@ -84,6 +84,15 @@ function readJsonBody(req: http.IncomingMessage): Promise<unknown> {
   })
 }
 
+/**
+ * The request path without query string or trailing slashes, so a URL typed as "/mcp/" or
+ * "/mcp?x=1" reaches the same handler as "/mcp" instead of failing with a confusing 404.
+ */
+function routeOf(req: http.IncomingMessage): string {
+  const path = (req.url ?? "/").split("?")[0]
+  return path.replace(/\/+$/, "") || "/"
+}
+
 function sendJson(res: http.ServerResponse, status: number, body: unknown, extraHeaders: Record<string, string> = {}) {
   res.writeHead(status, { "content-type": "application/json", ...extraHeaders })
   res.end(JSON.stringify(body))
@@ -125,7 +134,7 @@ async function handleMcpRequest(req: http.IncomingMessage, res: http.ServerRespo
     v2BaseUrl: process.env.RECHNUNGSAPI_V2_BASE_URL,
   })
 
-  const mcpServer = new McpServer({ name: SERVER_NAME, version: SERVER_VERSION })
+  const mcpServer = new McpServer({ name: SERVER_NAME, version: SERVER_VERSION }, { instructions: SERVER_INSTRUCTIONS })
   registerTools(mcpServer, client)
 
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined })
@@ -150,12 +159,14 @@ const server = http.createServer(async (req, res) => {
     )
   })
 
-  if (req.url === "/health" && (req.method === "GET" || req.method === "HEAD")) {
+  const route = routeOf(req)
+
+  if (route === "/health" && (req.method === "GET" || req.method === "HEAD")) {
     sendJson(res, 200, { ok: true, name: SERVER_NAME, version: SERVER_VERSION })
     return
   }
 
-  if (req.url !== "/mcp") {
+  if (route !== "/mcp") {
     sendJson(res, 404, { error: "Not found. POST to /mcp." })
     return
   }

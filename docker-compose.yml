@@ -4,7 +4,9 @@ services:
     # Or, once published to a registry: image: ghcr.io/rechnungsapi/rechnungsapi-mcp:latest
     restart: unless-stopped
     ports:
-      - "3939:3939"
+      # Published on this machine only. The server speaks plain HTTP, so put a TLS reverse proxy in
+      # front of it (see deploy/nginx-mcp.conf) instead of exposing the port to the network.
+      - "127.0.0.1:3939:3939"
     environment:
       # Optional overrides — leave unset to use the production gateway.
       # RECHNUNGSAPI_BASE_URL: https://your-gateway.example.com

@@ -59,10 +59,12 @@ Or via Docker:
 
 ```bash
 docker build -t rechnungsapi-mcp .
-docker run -p 3939:3939 rechnungsapi-mcp
+docker run -p 127.0.0.1:3939:3939 rechnungsapi-mcp
 ```
 
-Or as a Portainer stack: paste [`docker-compose.yml`](docker-compose.yml) into Portainer's Stacks → Add stack → Web editor, then deploy.
+Or with Docker Compose: `docker compose up -d` builds the image from this repo's [`Dockerfile`](Dockerfile) (see [`docker-compose.yml`](docker-compose.yml)).
+
+Or as a **Portainer stack**: paste [`deploy/portainer-stack.yml`](deploy/portainer-stack.yml) into Stacks → Add stack → Web editor and deploy. It needs no build — the container installs the published package from npm when it starts. To upgrade, change the version in its `command` and redeploy. (Use this file rather than `docker-compose.yml` in the web editor: there is no build context there for `build: .` to use.)
 
 No `RECHNUNGSAPI_TOKEN` is configured on the server itself in this mode — each caller supplies their own.
 
@@ -85,6 +87,8 @@ No `RECHNUNGSAPI_TOKEN` is configured on the server itself in this mode — each
 ### Putting it behind a domain
 
 See [`deploy/nginx-mcp.conf`](deploy/nginx-mcp.conf) for a ready-to-use reverse proxy config (e.g. for `mcp.rechnungsapi.de`), including the settings needed so nginx doesn't buffer/break the SSE streaming responses. Pair it with `certbot --nginx -d mcp.rechnungsapi.de` for HTTPS — required in practice, since real API tokens travel in every request. Also redirect plain HTTP to HTTPS (Nginx Proxy Manager: enable **Force SSL** on the proxy host), so a mistyped `http://` URL never sends a token unencrypted.
+
+Two proxy settings matter for real invoices. First, the body limit: nginx refuses request bodies over 1 MB by default (`413`, before the request reaches this server), so the shipped config sets `client_max_body_size 64m` to match `MAX_BODY_MB` — in Nginx Proxy Manager, add the same line under the proxy host's **Advanced** tab if you ever see those `413`s. Second, the timeout: analysing a large scan can take a while, so the shipped config raises `proxy_read_timeout`; clients can also use the async tools for big files.
 
 ### What users configure, once it's hosted
 
@@ -119,6 +123,7 @@ docker logs -f rechnungsapi-mcp
 | `GET /mcp -> 405` | Expected. This server doesn't offer the optional server-push SSE stream; compliant clients continue over `POST`. |
 | `OPTIONS /mcp -> 204` | Expected — a browser-based client's CORS preflight. |
 | `POST /mcp -> 413` | The request body exceeded `MAX_BODY_MB`. |
+| The client gets `413 Request Entity Too Large` (an HTML page) but the log shows nothing | The reverse proxy refused the body before it reached this server. nginx's default limit is 1 MB — set `client_max_body_size 64m;` (see [`deploy/nginx-mcp.conf`](deploy/nginx-mcp.conf)). |
 | `POST /mcp -> 400` | The body wasn't valid JSON (JSON-RPC parse error `-32700`). |
 
 Log lines record JSON-RPC method names only (e.g. `rpc=tools/call`), never arguments, so invoice data and tokens don't end up in your logs.
@@ -144,6 +149,7 @@ Each tool maps to one RechnungsAPI endpoint — the [API documentation](https://
 ```bash
 yarn install
 yarn typecheck
+yarn test    # builds first, then runs the stdio and HTTP suites against a stub API
 yarn build
 ```
 
@@ -153,7 +159,7 @@ Test locally with the [MCP Inspector](https://github.com/modelcontextprotocol/in
 RECHNUNGSAPI_TOKEN=your-token yarn inspect
 ```
 
-> **Note:** `@modelcontextprotocol/sdk` is pinned to `1.22.0` (not `^1.x`). Versions ≥1.23.0 introduced a Zod v3/v4 compatibility layer that currently triggers a `TS2589: Type instantiation is excessively deep` compiler error with `registerTool` (see [modelcontextprotocol/typescript-sdk#1180](https://github.com/modelcontextprotocol/typescript-sdk/issues/1180) and [#1423](https://github.com/modelcontextprotocol/typescript-sdk/issues/1423)). Re-evaluate this pin once that's fixed upstream.
+> **Note:** `@modelcontextprotocol/sdk` is pinned to an exact version rather than `^1.x`. This server is reachable from the internet, so the library only changes after the test suite has run against the new version. Releases before 1.26.0 have published security advisories (they show up in `npm audit`), so don't go back to an older one.
 
 ## License
 

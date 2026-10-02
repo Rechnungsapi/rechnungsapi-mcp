@@ -58,6 +58,15 @@ Or as a Portainer stack: paste [`docker-compose.yml`](docker-compose.yml) into P
 
 No `RECHNUNGSAPI_TOKEN` is configured on the server itself in this mode — each caller supplies their own.
 
+### Server settings (HTTP mode)
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `3939` | Port to listen on |
+| `MAX_BODY_MB` | `64` | Largest accepted request body. Invoices arrive as base64 PDFs, so this is generous; anything larger is answered with `413`. |
+| `RECHNUNGSAPI_BASE_URL` | production gateway | Override the gateway base URL |
+| `RECHNUNGSAPI_V2_BASE_URL` | production v2 host | Override the v2 analyzer host |
+
 ### Endpoints
 
 | Endpoint | Description |
@@ -67,7 +76,7 @@ No `RECHNUNGSAPI_TOKEN` is configured on the server itself in this mode — each
 
 ### Putting it behind a domain
 
-See [`deploy/nginx-mcp.conf`](deploy/nginx-mcp.conf) for a ready-to-use reverse proxy config (e.g. for `mcp.rechnungsapi.de`), including the settings needed so nginx doesn't buffer/break the SSE streaming responses. Pair it with `certbot --nginx -d mcp.rechnungsapi.de` for HTTPS — required in practice, since real API tokens travel in every request.
+See [`deploy/nginx-mcp.conf`](deploy/nginx-mcp.conf) for a ready-to-use reverse proxy config (e.g. for `mcp.rechnungsapi.de`), including the settings needed so nginx doesn't buffer/break the SSE streaming responses. Pair it with `certbot --nginx -d mcp.rechnungsapi.de` for HTTPS — required in practice, since real API tokens travel in every request. Also redirect plain HTTP to HTTPS (Nginx Proxy Manager: enable **Force SSL** on the proxy host), so a mistyped `http://` URL never sends a token unencrypted.
 
 ### What users configure, once it's hosted
 
@@ -101,6 +110,8 @@ docker logs -f rechnungsapi-mcp
 | `401 ... auth=yes` | The header arrived but the token is empty or wrong. The `Bearer ` prefix is optional — a bare token is accepted. |
 | `GET /mcp -> 405` | Expected. This server doesn't offer the optional server-push SSE stream; compliant clients continue over `POST`. |
 | `OPTIONS /mcp -> 204` | Expected — a browser-based client's CORS preflight. |
+| `POST /mcp -> 413` | The request body exceeded `MAX_BODY_MB`. |
+| `POST /mcp -> 400` | The body wasn't valid JSON (JSON-RPC parse error `-32700`). |
 
 Log lines record JSON-RPC method names only (e.g. `rpc=tools/call`), never arguments, so invoice data and tokens don't end up in your logs.
 

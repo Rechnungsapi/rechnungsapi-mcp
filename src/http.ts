@@ -7,6 +7,22 @@ import { SERVER_NAME, SERVER_VERSION } from "./version.js"
 
 const PORT = Number(process.env.PORT ?? 3939)
 
+// Invoices travel as base64 PDFs, so the cap is generous. Without one, anyone able
+// to send an Authorization header could make this process buffer an unbounded body
+// in memory before the API ever gets the chance to reject their token.
+const MAX_BODY_MB = Number(process.env.MAX_BODY_MB ?? 64)
+const MAX_BODY_BYTES = (Number.isFinite(MAX_BODY_MB) && MAX_BODY_MB > 0 ? MAX_BODY_MB : 64) * 1024 * 1024
+
+class HttpError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+    readonly rpcCode?: number,
+  ) {
+    super(message)
+  }
+}
+
 const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "POST, OPTIONS",
@@ -20,7 +36,8 @@ function extractBearerToken(req: http.IncomingMessage): string | null {
   const header = req.headers["authorization"]
   if (!header || Array.isArray(header)) return null
   const value = header.trim()
-  if (!value) return null
+  // "Bearer" with nothing after it is a missing credential, not a token named "Bearer".
+  if (!value || /^bearer$/i.test(value)) return null
   // Some connector UIs (Claude.ai's included) make the user type the scheme
   // themselves, so a bare token with no "Bearer " prefix is a common slip.
   // Accept it rather than failing the whole connection over it.
@@ -30,10 +47,24 @@ function extractBearerToken(req: http.IncomingMessage): string | null {
 }
 
 async function readJsonBody(req: http.IncomingMessage): Promise<unknown> {
+  const tooLarge = () => new HttpError(413, `Request body exceeds the ${MAX_BODY_BYTES / 1024 / 1024} MB limit`)
+  const declared = Number(req.headers["content-length"])
+  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) throw tooLarge()
+
   const chunks: Buffer[] = []
-  for await (const chunk of req) chunks.push(chunk as Buffer)
+  let size = 0
+  for await (const chunk of req) {
+    size += (chunk as Buffer).length
+    if (size > MAX_BODY_BYTES) throw tooLarge()
+    chunks.push(chunk as Buffer)
+  }
   const raw = Buffer.concat(chunks).toString("utf8")
-  return raw ? JSON.parse(raw) : undefined
+  if (!raw) return undefined
+  try {
+    return JSON.parse(raw)
+  } catch {
+    throw new HttpError(400, "Parse error: request body is not valid JSON", -32700)
+  }
 }
 
 function sendJson(res: http.ServerResponse, status: number, body: unknown, extraHeaders: Record<string, string> = {}) {
@@ -135,9 +166,21 @@ const server = http.createServer(async (req, res) => {
   try {
     await handleMcpRequest(req, res, log)
   } catch (error) {
+    if (error instanceof HttpError) {
+      if (!res.headersSent) {
+        const body =
+          error.rpcCode !== undefined
+            ? { jsonrpc: "2.0", error: { code: error.rpcCode, message: error.message }, id: null }
+            : { error: error.message }
+        sendJson(res, error.status, body, error.status === 413 ? { connection: "close" } : {})
+        // Stop reading an oversized upload once the answer is on its way.
+        if (error.status === 413) res.once("finish", () => req.destroy())
+      }
+      return
+    }
     console.error("Request failed:", error)
     if (!res.headersSent) {
-      sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) })
+      sendJson(res, 500, { error: "Internal server error" })
     }
   }
 })

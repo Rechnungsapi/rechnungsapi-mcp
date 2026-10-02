@@ -31,7 +31,7 @@ Get your API token from the [RechnungsAPI dashboard](https://rechnungsapi.de), t
 | Variable | Required | Description |
 |---|---|---|
 | `RECHNUNGSAPI_TOKEN` | Yes | Your RechnungsAPI Bearer token |
-| `RECHNUNGSAPI_BASE_URL` | No | Override the gateway base URL (e.g. for a sandbox environment) |
+| `RECHNUNGSAPI_BASE_URL` | No | Override the gateway base URL (e.g. a staging or self-hosted gateway) |
 | `RECHNUNGSAPI_V2_BASE_URL` | No | Override the v2 analyzer host |
 
 ## Self-hosting (Streamable HTTP)

@@ -46,25 +46,42 @@ function extractBearerToken(req: http.IncomingMessage): string | null {
   return token || null
 }
 
-async function readJsonBody(req: http.IncomingMessage): Promise<unknown> {
+function readJsonBody(req: http.IncomingMessage): Promise<unknown> {
   const tooLarge = () => new HttpError(413, `Request body exceeds the ${MAX_BODY_BYTES / 1024 / 1024} MB limit`)
   const declared = Number(req.headers["content-length"])
-  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) throw tooLarge()
+  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) return Promise.reject(tooLarge())
 
-  const chunks: Buffer[] = []
-  let size = 0
-  for await (const chunk of req) {
-    size += (chunk as Buffer).length
-    if (size > MAX_BODY_BYTES) throw tooLarge()
-    chunks.push(chunk as Buffer)
-  }
-  const raw = Buffer.concat(chunks).toString("utf8")
-  if (!raw) return undefined
-  try {
-    return JSON.parse(raw)
-  } catch {
-    throw new HttpError(400, "Parse error: request body is not valid JSON", -32700)
-  }
+  // Event-based on purpose: breaking out of `for await (const c of req)` destroys the
+  // request, and with it the socket, before the 413 can be delivered.
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = []
+    let size = 0
+    let rejected = false
+    req.on("data", (chunk: Buffer) => {
+      if (rejected) return // keep consuming (and discarding) so the client can finish and read our answer
+      size += chunk.length
+      if (size > MAX_BODY_BYTES) {
+        rejected = true
+        chunks.length = 0
+        reject(tooLarge())
+        return
+      }
+      chunks.push(chunk)
+    })
+    req.on("end", () => {
+      if (rejected) return
+      const raw = Buffer.concat(chunks).toString("utf8")
+      if (!raw) return resolve(undefined)
+      try {
+        resolve(JSON.parse(raw))
+      } catch {
+        reject(new HttpError(400, "Parse error: request body is not valid JSON", -32700))
+      }
+    })
+    req.on("error", reject)
+    // A promise settles once, so this is a no-op after a normal end.
+    req.on("close", () => reject(new Error("connection closed before the request body was complete")))
+  })
 }
 
 function sendJson(res: http.ServerResponse, status: number, body: unknown, extraHeaders: Record<string, string> = {}) {
@@ -172,9 +189,15 @@ const server = http.createServer(async (req, res) => {
           error.rpcCode !== undefined
             ? { jsonrpc: "2.0", error: { code: error.rpcCode, message: error.message }, id: null }
             : { error: error.message }
-        sendJson(res, error.status, body, error.status === 413 ? { connection: "close" } : {})
-        // Stop reading an oversized upload once the answer is on its way.
-        if (error.status === 413) res.once("finish", () => req.destroy())
+        sendJson(res, error.status, body)
+      }
+      if (error.status === 413) {
+        // The client may still be uploading. Keep discarding it so it can finish and read
+        // this answer (closing early shows up client-side as EPIPE/ECONNRESET), but cap how
+        // long that can go on so it can't be used to hold a connection open.
+        const stop = setTimeout(() => req.destroy(), 10_000)
+        stop.unref()
+        req.once("close", () => clearTimeout(stop))
       }
       return
     }

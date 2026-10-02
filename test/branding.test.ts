@@ -54,9 +54,19 @@ describe("the package presents itself as RechnungsAPI (rechnungsapi.de)", () => 
     const opening = readme.slice(0, 900)
     expect(opening).toContain("RechnungsAPI")
     expect(opening).toContain("rechnungsapi.de")
-    expect(opening).toContain("https://mcp.rechnungsapi.de/mcp")
+    expect(readme).toContain("https://mcp.rechnungsapi.de/mcp")
     expect(readme).toContain("https://rechnungsapi.de/api-docs")
     expect(readme).toContain("support@rechnungsapi.de")
+  })
+
+  it("shows a banner that really exists in the repository", () => {
+    const readme = read("README.md")
+    const match = readme.match(/raw\.githubusercontent\.com\/Rechnungsapi\/rechnungsapi-mcp\/main\/(assets\/[^"')\s]+)/)
+    expect(match, "the README should reference its banner image").not.toBeNull()
+    const svg = read(match![1])
+    expect(svg).toContain("<svg")
+    expect(svg).toContain("RechnungsAPI")
+    expect(svg).not.toMatch(/x-?invoice/i)
   })
 
   it("labels the Docker image with the vendor and the website", () => {
